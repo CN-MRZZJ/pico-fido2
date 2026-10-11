@@ -28,7 +28,7 @@ jobs:
         env:
           PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
         run: |
-          cmake -S . -B build_rp2350_one -DPICO_BOARD=waveshare_rp2350_one -DENABLE_EDDSA=ON -DENABLE_OATH_APP=ON -DENABLE_OTP_APP=ON
+          cmake -S . -B build_rp2350_one -DCMAKE_BUILD_TYPE=MinSizeRel -DPICO_BOARD=waveshare_rp2350_one -DENABLE_EDDSA=ON -DENABLE_OATH_APP=ON -DENABLE_OTP_APP=ON
           cmake --build build_rp2350_one --parallel 2
           sha256sum build_rp2350_one/pico_fido2.uf2 > build_rp2350_one/SHA256SUMS.txt
       - name: Upload firmware

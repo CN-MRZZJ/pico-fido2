@@ -1,0 +1,41 @@
+name: Build RP2350-One
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout pinned firmware source
+        uses: actions/checkout@v4
+        with:
+          repository: librekeys/pico-fido2
+          ref: 391252e5e84b475add357ea0d3e5c79b7e42ace8
+          submodules: recursive
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+      - name: Download Pico SDK
+        run: |
+          git clone --branch 2.1.1 --depth 1 https://github.com/raspberrypi/pico-sdk.git
+          git -C pico-sdk submodule update --init --recursive
+      - name: Build combined firmware
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+        run: |
+          cmake -S . -B build_rp2350_one -DPICO_BOARD=waveshare_rp2350_one -DENABLE_EDDSA=ON -DENABLE_OATH_APP=ON -DENABLE_OTP_APP=ON
+          cmake --build build_rp2350_one --parallel 2
+          sha256sum build_rp2350_one/pico_fido2.uf2 > build_rp2350_one/SHA256SUMS.txt
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: pico-fido2-rp2350-one
+          path: |
+            build_rp2350_one/pico_fido2.uf2
+            build_rp2350_one/SHA256SUMS.txt
+          if-no-files-found: error
